@@ -37,33 +37,33 @@ class WebServerHandler(BaseHTTPRequestHandler):
 
                 output = self.open_tags
                 output += "&#161;Hola! <br>"
-                output +=self.form_html
+                output += self.form_html
                 output += "<a href='/hello'>Back Home</a>"
                 output += self.close_tags
                 self.wfile.write(output.encode())
                 print(output)
 
             if self.path.endswith("/restaurants"):
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
                 # Call restaurant names from database
                 conn = sqlite3.connect('restaurantmenu.db')
                 cursor = conn.cursor()
                 cursor.execute("SELECT name FROM restaurant")
                 results = cursor.fetchall()
-
-                self.send_response(200)
-                self.send_header('Content-type', 'text/html')
-                print(self.open_tags)
-
-                # Print restaurant names from database
-                output = ""
-                for r in results:
-                    output += "{}".format(r)
-                    self.wfile.write(output.encode())
-
                 cursor.close()
                 conn.close()
-                print(self.close_tags)
-                self.end_headers()
+                
+                output = self.open_tags + "<h1>Restaurants</h1>"
+                # Print restaurant names from database
+                for r in results:
+                    r = str(r)
+                    r = r[2:-3]
+                    output += "<h2>{}</h2>".format(r)
+                output += self.close_tags
+                self.wfile.write(output.encode())
+                print(output)
 
 
         except IOError:
