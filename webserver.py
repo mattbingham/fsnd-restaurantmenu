@@ -2,6 +2,7 @@
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import cgi
+import sqlite3
 
 
 class WebServerHandler(BaseHTTPRequestHandler):
@@ -12,20 +13,20 @@ class WebServerHandler(BaseHTTPRequestHandler):
         <input name="message" type="text"><input type="submit" value="Submit" >
         </form>
          '''
+    open_tags = "<html><body>"
+    close_tags = "</html></body>"
 
     def do_GET(self):
+
         try:
             if self.path.endswith("/hello"):
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
 
-                output = ""
-                output += "<html>" \
-                          " <body>" \
-                          "     Hello!<br>" + self.form_html + \
-                          " </body>" \
-                          "</html>"
+                output = self.open_tags
+                output += "Hello!<br>" + self.form_html
+                output += self.close_tags
                 self.wfile.write(output.encode())
                 print(output)
 
@@ -34,14 +35,36 @@ class WebServerHandler(BaseHTTPRequestHandler):
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
 
-                output = "<html>" \
-                         "    <body>" \
-                         "      &#161;Hola! <br>" + self.form_html + \
-                         "      <a href='/hello'>Back Home</a>" \
-                         "    </body>" \
-                         "</html>"
+                output = self.open_tags
+                output += "&#161;Hola! <br>"
+                output +=self.form_html
+                output += "<a href='/hello'>Back Home</a>"
+                output += self.close_tags
                 self.wfile.write(output.encode())
                 print(output)
+
+            if self.path.endswith("/restaurants"):
+                # Call restaurant names from database
+                conn = sqlite3.connect('restaurantmenu.db')
+                cursor = conn.cursor()
+                cursor.execute("SELECT name FROM restaurant")
+                results = cursor.fetchall()
+
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                print(self.open_tags)
+
+                # Print restaurant names from database
+                output = ""
+                for r in results:
+                    output += "{}".format(r)
+                    self.wfile.write(output.encode())
+
+                cursor.close()
+                conn.close()
+                print(self.close_tags)
+                self.end_headers()
+
 
         except IOError:
             self.send_error(404, "File Not Found {}".format(self.path))
@@ -90,4 +113,4 @@ def main():
 
 
 if __name__ == '__main__':
-	main()
+    main()
