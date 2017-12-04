@@ -61,6 +61,8 @@ class WebServerHandler(BaseHTTPRequestHandler):
                     r = str(r)
                     r = r[2:-3]
                     output += "<h2>{}</h2>".format(r)
+                    output += '<a href="">Edit</a><br>'
+                    output += '<a href="">Delete</a>'
                 output += self.close_tags
                 self.wfile.write(output.encode())
                 print(output)
